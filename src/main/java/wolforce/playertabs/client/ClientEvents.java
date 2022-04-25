@@ -2,6 +2,7 @@ package wolforce.playertabs.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.chat.TranslatableComponent;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
@@ -24,23 +25,36 @@ public class ClientEvents {
 			InventoryScreen screen = (InventoryScreen) event.getScreen();
 			@SuppressWarnings("resource")
 			Player player = Minecraft.getInstance().player;
-			TabsCapability tabs = player.getCapability(TabsCapability.CAPABILITY).resolve().get();
-
-			for (int i = 0; i < PlayerTabs.NUMBER_OF_TABS; i++) {
-				final int tabNr = i;
-				TabButton tabButton = new TabButton(//
-						screen.getGuiLeft() + tabNr * 38, screen.getGuiTop() + 165, //
-						38, 20, //
-						new TranslatableComponent("Tab " + tabNr), //
-						button -> {
-							Net.sendToggleMessage(tabNr);
-						}, null);
-				if (tabs.getCurrentTab() == i) {
-					tabButton.active = false;
+			TabsCapability tabs = TabsCapability.get(player);
+			if (tabs != null) {
+				TabButton[] buttons = new TabButton[PlayerTabs.NUMBER_OF_TABS];
+				for (int i = 0; i < PlayerTabs.NUMBER_OF_TABS; i++) {
+					final int tabNr = i;
+					buttons[i] = new TabButton(//
+							screen.getGuiLeft() + tabNr * 38, screen.getGuiTop() + 165, //
+							38, 20, //
+							new TranslatableComponent("Tab " + tabNr), //
+							button -> {
+								Net.sendToggleMessageToServer(tabNr);
+								buttons[tabs.getCurrentTab()].active = true;
+								buttons[tabNr].active = false;
+								tabs.setCurrentTab(tabNr);
+							}, null);
+					if (i == tabs.getCurrentTab()) {
+						buttons[i].active = false;
+					}
+					event.addListener(buttons[i]);
 				}
-				event.addListener(tabButton);
 			}
+		}
+	}
 
+	public static void switchToTab(byte tab) {
+		@SuppressWarnings("resource")
+		LocalPlayer player = Minecraft.getInstance().player;
+		TabsCapability tabs = TabsCapability.get(player);
+		if (tabs != null) {
+			tabs.setCurrentTab(tab);
 		}
 	}
 }

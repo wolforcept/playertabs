@@ -25,6 +25,8 @@ public class MessageToggle {
 
 	public void onMessage(final Supplier<NetworkEvent.Context> ctx) {
 		Player player = ctx.get().getSender();
+		if (player == null)
+			wolforce.playertabs.client.ClientEvents.switchToTab( tab);
 		TabsCapability.switchToTab(player, tab);
 		ctx.get().setPacketHandled(true);
 	}
