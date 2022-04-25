@@ -1,0 +1,19 @@
+modLoader="javafml"
+loaderVersion="[40,)"
+license="All rights reserved"
+[[mods]]
+modId="playertabs"
+version="${file.jarVersion}"
+displayName="Player Tabs"
+logoFile="logo.png"
+credits="Wolforce"
+authors="Wolforce"
+description='''
+    Adds Tabs to the Player Inventory
+'''
+[[dependencies.playertabs]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.18.2,1.19)"
+    ordering="NONE"
+    side="BOTH"
