@@ -21,6 +21,7 @@ public class Net {
 
 		int id = 0;
 		INSTANCE.registerMessage(id++, MessageToggle.class, MessageToggle::encode, MessageToggle::decode, MessageToggle::onMessage);
+		INSTANCE.registerMessage(id++, MessageBroadcastTabs.class, MessageBroadcastTabs::encode, MessageBroadcastTabs::decode, MessageBroadcastTabs::onMessage);
 	}
 
 	public static void sendToggleMessageToServer(int tab) {
@@ -30,6 +31,11 @@ public class Net {
 	public static void sendToggleMessageToClient(ServerPlayer serverplayer, int tab) {
 		INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverplayer), //
 				new MessageToggle((byte) tab));
+	}
+
+	public static void sendNumberOfTabs(ServerPlayer serverplayer, int nrOfTabs) {
+		INSTANCE.send(PacketDistributor.PLAYER.with(() -> serverplayer), //
+				new MessageBroadcastTabs(nrOfTabs));
 	}
 
 }

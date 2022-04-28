@@ -1,11 +1,14 @@
 package wolforce.playertabs;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
 
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
@@ -20,6 +23,7 @@ import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import wolforce.playertabs.server.PlayerTabsConfigServer;
 
 public class TabsCapability {
 
@@ -31,7 +35,7 @@ public class TabsCapability {
 	private int INV_SIZE = 27;
 
 	public TabsCapability() {
-		tabs = new ItemStackHandler[PlayerTabs.NUMBER_OF_TABS];
+		tabs = new ItemStackHandler[PlayerTabsConfigServer.getNumberOfTabs()];
 		for (int i = 0; i < tabs.length; i++) {
 			tabs[i] = new ItemStackHandler(INV_SIZE);
 		}
@@ -45,7 +49,20 @@ public class TabsCapability {
 		currTab = tabNr;
 	}
 
+	public void update() {
+		int nr = PlayerTabsConfigServer.getNumberOfTabs();
+		if (nr != tabs.length) {
+			ItemStackHandler[] newTabs = new ItemStackHandler[nr];
+			for (int i = 0; i < nr; i++)
+				newTabs[i] = new ItemStackHandler(INV_SIZE);
+			for (int i = 0; i < Math.min(nr, tabs.length); i++)
+				newTabs[i] = tabs[i];
+			tabs = newTabs;
+		}
+	}
+
 	public ItemStackHandler getTab(int i) {
+		update();
 		if (i >= 0 && i < tabs.length) {
 			return tabs[i];
 		}
@@ -53,13 +70,16 @@ public class TabsCapability {
 	}
 
 	public void saveInvToCurrTab(IItemHandler inv) {
-		for (int i = 0; i < INV_SIZE; i++) {
-			ItemStack item = inv.extractItem(i + 9, 64, false);
-			tabs[currTab].setStackInSlot(i, item);
-		}
+		update();
+		if (currTab < tabs.length)
+			for (int i = 0; i < INV_SIZE; i++) {
+				ItemStack item = inv.extractItem(i + 9, 64, false);
+				tabs[currTab].setStackInSlot(i, item);
+			}
 	}
 
 	public void writeTabToInv(int tabNr, IItemHandler inv) {
+		update();
 		for (int i = 0; i < INV_SIZE; i++) {
 			ItemStack item = tabs[tabNr].extractItem(i, 64, false);
 			inv.extractItem(i + 9, 64, false);
@@ -70,8 +90,11 @@ public class TabsCapability {
 
 	public static void switchToTab(Player player, int tabNr) {
 		TabsCapability tabs = TabsCapability.get(player);
+		if (tabs == null)
+			return;
 		IItemHandler inv = TabsCapability.getInv(player);
 		if (tabs != null && inv != null) {
+			tabs.update();
 			tabs.saveInvToCurrTab(inv);
 			tabs.writeTabToInv(tabNr, inv);
 		}
@@ -108,9 +131,12 @@ public class TabsCapability {
 
 			@Override
 			public void deserializeNBT(CompoundTag tag) {
+				tabs.update();
 				tabs.currTab = tag.getInt("currTab");
 				for (int i = 0; i < tabs.tabs.length; i++) {
-					tabs.tabs[i].deserializeNBT((CompoundTag) tag.get("tab" + i));
+					Tag tabTag = tag.get("tab" + i);
+					if (tabTag != null && tabTag instanceof CompoundTag)
+						tabs.tabs[i].deserializeNBT((CompoundTag) tabTag);
 				}
 			}
 
@@ -144,5 +170,14 @@ public class TabsCapability {
 			}
 		}
 		return null;
+	}
+
+	public List<ItemStackHandler> getAllOtherTabs() {
+		List<ItemStackHandler> otherTabsList = new LinkedList<>();
+		for (int i = 0; i < this.tabs.length; i++) {
+			if (i != currTab)
+				otherTabsList.add(this.tabs[i]);
+		}
+		return otherTabsList;
 	}
 }
