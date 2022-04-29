@@ -5,9 +5,11 @@ import java.util.List;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.GameRules;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -42,8 +44,7 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onPlayerDeath(LivingDeathEvent event) {
-		if (event.getEntityLiving() instanceof Player) {
-			Player player = (Player) event.getEntityLiving();
+		if (event.getEntityLiving()instanceof Player player && !event.getEntityLiving().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
 			List<ItemStackHandler> otherTabs = TabsCapability.get(player).getAllOtherTabs();
 			for (ItemStackHandler handler : otherTabs) {
 				for (int i = 0; i < handler.getSlots(); i++) {
@@ -52,4 +53,24 @@ public class ForgeEvents {
 			}
 		}
 	}
+
+	@SubscribeEvent
+	public static void onPlayerClone(PlayerEvent.Clone event) {
+		if (event.isWasDeath() && event.getPlayer().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+			final Player player = event.getPlayer();
+			TabsCapability newCap = TabsCapability.get(player);
+			event.getOriginal().reviveCaps();
+			TabsCapability prevCap = TabsCapability.get(event.getOriginal());
+			newCap.cloneFrom(prevCap);
+		}
+	}
+
+	@SubscribeEvent
+	public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
+		if (event.getPlayer()instanceof ServerPlayer player) {
+			TabsCapability tabs = TabsCapability.get(player);
+			Net.sendToggleMessageToClient((ServerPlayer) player, tabs.getCurrentTab());
+		}
+	}
+
 }

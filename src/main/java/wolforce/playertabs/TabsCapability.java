@@ -29,10 +29,10 @@ public class TabsCapability {
 
 	public static final Capability<TabsCapability> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {
 	});
+	private static final int INV_SIZE = 27;
 
 	private int currTab = 0;
 	private ItemStackHandler[] tabs;
-	private int INV_SIZE = 27;
 
 	public TabsCapability() {
 		tabs = new ItemStackHandler[PlayerTabsConfigServer.getNumberOfTabs()];
@@ -179,5 +179,10 @@ public class TabsCapability {
 				otherTabsList.add(this.tabs[i]);
 		}
 		return otherTabsList;
+	}
+
+	public void cloneFrom(TabsCapability prev) {
+		this.currTab = prev.currTab;
+		this.tabs = prev.tabs;
 	}
 }

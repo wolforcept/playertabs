@@ -27,7 +27,7 @@ public class PlayerTabs {
 
 //	private void setup(final FMLCommonSetupEvent event) {
 //	}
-//
+
 //	@SubscribeEvent
 //	public void onServerStarting(ServerStartingEvent event) {
 //	}
