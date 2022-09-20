@@ -36,10 +36,13 @@ public class TabButton extends AbstractButton {
 	}
 
 	public void renderButton(PoseStack pose, int mx, int my, float f) {
+		pose.pushPose();
+		pose.setIdentity();
 		super.renderButton(pose, mx, my, f);
 		if (Util.isValid(stack)) {
-			Minecraft.getInstance().getItemRenderer().renderAndDecorateFakeItem(stack, x + width / 2 - 8, y + height / 2 - 8);
+			Minecraft.getInstance().getItemRenderer().renderGuiItem(stack, x + width / 2 - 8, y + height / 2 - 8);
 		}
+		pose.popPose();
 	}
 
 	@Override
