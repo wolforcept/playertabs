@@ -1,23 +1,19 @@
 package wolforce.playertabs;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.annotation.Nullable;
-
+import java.util.*;
+import com.google.common.collect.Maps;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.capabilities.*;
 import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.items.IItemHandler;
 import net.minecraftforge.items.ItemStackHandler;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import wolforce.playertabs.server.PlayerTabsConfigServer;
 
 public class TabsCapability {
@@ -28,6 +24,7 @@ public class TabsCapability {
 
 	private int currTab = 0;
 	private ItemStackHandler[] tabs;
+	private final Map<Item,Integer> ItemSortMap = Maps.newHashMap();
 
 	public TabsCapability() {
 		tabs = new ItemStackHandler[PlayerTabsConfigServer.getNumberOfTabs()];
@@ -35,27 +32,43 @@ public class TabsCapability {
 			tabs[i] = new ItemStackHandler(INV_SIZE);
 		}
 	}
-
 	public int getCurrentTab() {
 		return currTab;
 	}
-
 	public void setCurrentTab(int tabNr) {
 		currTab = tabNr;
 	}
 
+	public Map<Item, Integer> getItemSortMap() {
+		return ItemSortMap;
+	}
+
+	public static
+	LazyOptional<TabsCapability> get(Player player) {
+		if (player == null) return LazyOptional.empty();
+		return player.getCapability(CAPABILITY);
+	}
 	public void update() {
-		int nr = PlayerTabsConfigServer.getNumberOfTabs();
-		if (nr != tabs.length) {
-			ItemStackHandler[] newTabs = new ItemStackHandler[nr];
-			for (int i = 0; i < nr; i++)
+		int number = PlayerTabsConfigServer.getNumberOfTabs();
+		if (number != tabs.length) {
+			ItemStackHandler[] newTabs = new ItemStackHandler[number];
+			for (int i = 0; i < number; i++)
 				newTabs[i] = new ItemStackHandler(INV_SIZE);
-			for (int i = 0; i < Math.min(nr, tabs.length); i++)
+			for (int i = 0; i < Math.min(number, tabs.length); i++)
 				newTabs[i] = tabs[i];
 			tabs = newTabs;
 		}
 	}
-
+	public void updateItemSort(){
+		for (int i = 0; i < tabs.length; i++) {
+			for (int j = 0; j < tabs[i].getSlots(); j++) {
+				ItemStack itemStack = tabs[i].getStackInSlot(j);
+				if (!itemStack.isEmpty()){
+					ItemSortMap.put(itemStack.getItem(),i);
+				}
+			}
+		}
+	}
 	public ItemStackHandler getTab(int i) {
 		update();
 		if (i >= 0 && i < tabs.length) {
@@ -63,7 +76,6 @@ public class TabsCapability {
 		}
 		return null;
 	}
-
 	public void saveInvToCurrTab(IItemHandler inv) {
 		update();
 		if (currTab < tabs.length)
@@ -82,89 +94,14 @@ public class TabsCapability {
 		}
 		currTab = tabNr;
 	}
-
 	public static void switchToTab(Player player, int tabNr) {
-		TabsCapability tabs = TabsCapability.get(player);
-		if (tabs == null)
-			return;
-		IItemHandler inv = TabsCapability.getInv(player);
-		if (tabs != null && inv != null) {
-			tabs.update();
-			tabs.saveInvToCurrTab(inv);
-			tabs.writeTabToInv(tabNr, inv);
-		}
-	}
-
-	//
-	// PROVIDER
-
-	public static void attachToPlayer(AttachCapabilitiesEvent<Entity> event) {
-
-//		event.addCapability(new ResourceLocation(PlayerTabs.MOD_ID), TabsCapability.getProvider());
-
-		ICapabilityProvider cap = new ICapabilitySerializable<CompoundTag>() {
-			TabsCapability tabs = new TabsCapability();
-			LazyOptional<TabsCapability> cap_provider = LazyOptional.of(() -> tabs);
-
-			@Override
-			public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction facing) {
-				if (capability == CAPABILITY)
-					return cap_provider.cast();
-				return LazyOptional.empty();
-			}
-
-			@Override
-			public CompoundTag serializeNBT() {
-
-				CompoundTag tag = new CompoundTag();
-				tag.putInt("currTab", tabs.currTab);
-				for (int i = 0; i < tabs.tabs.length; i++) {
-					tag.put("tab" + i, tabs.tabs[i].serializeNBT());
-				}
-				return tag;
-			}
-
-			@Override
-			public void deserializeNBT(CompoundTag tag) {
-				tabs.update();
-				tabs.currTab = tag.getInt("currTab");
-				for (int i = 0; i < tabs.tabs.length; i++) {
-					Tag tabTag = tag.get("tab" + i);
-					if (tabTag != null && tabTag instanceof CompoundTag)
-						tabs.tabs[i].deserializeNBT((CompoundTag) tabTag);
-				}
-			}
-
-		};
-
-		event.addCapability(new ResourceLocation(PlayerTabs.MOD_ID), cap);
-
-	}
-
-	public static TabsCapability get(Player player) {
-		if (player != null) {
-			LazyOptional<TabsCapability> cap = player.getCapability(TabsCapability.CAPABILITY);
-			if (cap != null && cap.isPresent()) {
-				Optional<TabsCapability> resolved = cap.resolve();
-				if (resolved != null && resolved.isPresent()) {
-					return resolved.get();
-				}
-			}
-		}
-		return null;
-	}
-
-	public static IItemHandler getInv(Player player) {
-		if (player != null) {
-			LazyOptional<IItemHandler> cap = player.getCapability(ForgeCapabilities.ITEM_HANDLER);
-			if (cap != null && cap.isPresent()) {
-				Optional<IItemHandler> resolved = cap.resolve();
-				if (resolved != null && resolved.isPresent()) {
-					return resolved.get();
-				}
-			}
-		}
-		return null;
+		TabsCapability.get(player).ifPresent(cap ->{
+			player.getCapability(ForgeCapabilities.ITEM_HANDLER).ifPresent(itemHand ->{
+				cap.update();
+				cap.saveInvToCurrTab(itemHand);
+				cap.writeTabToInv(tabNr, itemHand);
+			});
+		});
 	}
 
 	public List<ItemStackHandler> getAllOtherTabs() {
@@ -179,5 +116,35 @@ public class TabsCapability {
 	public void cloneFrom(TabsCapability prev) {
 		this.currTab = prev.currTab;
 		this.tabs = prev.tabs;
+	}
+	public static class Provider implements ICapabilitySerializable<CompoundTag>{
+		TabsCapability capability = new TabsCapability();
+		LazyOptional<TabsCapability> cap_provider = LazyOptional.of(() -> capability);
+
+		@Override
+		public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
+			return cap == CAPABILITY ? cap_provider.cast() : LazyOptional.empty();
+		}
+
+		@Override
+		public CompoundTag serializeNBT() {
+			CompoundTag tag = new CompoundTag();
+			tag.putInt("currTab", capability.currTab);
+			for (int i = 0; i < capability.tabs.length; i++) {
+				tag.put("tab" + i, capability.tabs[i].serializeNBT());
+			}
+			return tag;
+		}
+
+		@Override
+		public void deserializeNBT(CompoundTag nbt) {
+			capability.update();
+			capability.currTab = nbt.getInt("currTab");
+			for (int i = 0; i < capability.tabs.length; i++) {
+				Tag tabTag = nbt.get("tab" + i);
+				if (tabTag instanceof CompoundTag compoundTag)
+					capability.tabs[i].deserializeNBT(compoundTag);
+			}
+		}
 	}
 }

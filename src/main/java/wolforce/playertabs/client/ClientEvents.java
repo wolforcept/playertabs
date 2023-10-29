@@ -36,50 +36,49 @@ public class ClientEvents {
 
 			if (blacklistedScreens == null || !blacklistedScreens.contains(screenName)) {
 
-				TabsCapability tabs = TabsCapability.get(player);
-				List<String> tabNames = PlayerTabsConfigClient.getTabNames();
-				int nrOfTabs = PlayerTabsConfigServer.getNumberOfTabs();
-				tabs.update();
-				if (tabs.getCurrentTab() >= nrOfTabs) {
-					tabs.setCurrentTab(0);
-					Net.sendToggleMessageToServer(0);
-				}
-				if (tabs != null) {
-					TabButton[] buttons = new TabButton[nrOfTabs];
-					for (int i = 0; i < nrOfTabs; i++) {
-						final int tabNr = i;
-						String tabName = i < tabNames.size() ? tabNames.get(i) : "Tab " + tabNr;
-						int w = screen.getXSize() / nrOfTabs;
-						int dy = screenName.equals("CreativeModeInventoryScreen") ? 24 : 0;
-						buttons[i] = new TabButton(//
-								screen.getGuiLeft() + tabNr * w, screen.getGuiTop() + screen.getYSize() + dy, w, 20, //
-								tabName, //
-								button -> {
-									Net.sendToggleMessageToServer(tabNr);
-									buttons[tabs.getCurrentTab()].active = true;
-									buttons[tabNr].active = false;
-									tabs.setCurrentTab(tabNr);
-								});
-						if (i == tabs.getCurrentTab()) {
-							buttons[i].active = false;
-						}
-						event.addListener(buttons[i]);
+				TabsCapability.get(player).ifPresent(cap ->{
+					List<String> tabNames = PlayerTabsConfigClient.getTabNames();
+					int nrOfTabs = PlayerTabsConfigServer.getNumberOfTabs();
+					cap.update();
+					if (cap.getCurrentTab() >= nrOfTabs) {
+						cap.setCurrentTab(0);
+						Net.sendToggleMessageToServer(0);
 					}
-				}
+                    TabButton[] buttons = new TabButton[nrOfTabs];
+                    for (int i = 0; i < nrOfTabs; i++) {
+                        final int tabNr = i;
+                        String tabName = i < tabNames.size() ? tabNames.get(i) : "Tab " + tabNr;
+                        int w = screen.getXSize() / nrOfTabs;
+                        int dy = screenName.equals("CreativeModeInventoryScreen") ? 24 : 0;
+                        buttons[i] = new TabButton(//
+                                screen.getGuiLeft() + tabNr * w, screen.getGuiTop() + screen.getYSize() + dy, w, 20, //
+                                tabName, //
+                                button -> {
+                                    Net.sendToggleMessageToServer(tabNr);
+                                    buttons[cap.getCurrentTab()].active = true;
+                                    buttons[tabNr].active = false;
+                                    cap.setCurrentTab(tabNr);
+                                });
+                        if (i == cap.getCurrentTab()) {
+                            buttons[i].active = false;
+                        }
+                        event.addListener(buttons[i]);
+                    }
+                });
 			}
 		}
 	}
 
 	public static void switchToTab(byte tab) {
 		LocalPlayer player = mc.player;
-		TabsCapability tabs = TabsCapability.get(player);
-		if (tabs != null) {
-			tabs.setCurrentTab(tab);
-		}
+		TabsCapability.get(player).ifPresent(cap ->{
+			TabsCapability.switchToTab(player, tab);
+		});
+
 	}
 
 	public static void setNumberOfTabs(int nrOfTabs) {
 		PlayerTabsConfigServer.setNumberOfTabs(nrOfTabs);
-		TabsCapability.get(mc.player).update();
+		TabsCapability.get(mc.player).ifPresent(TabsCapability::update);
 	}
 }
