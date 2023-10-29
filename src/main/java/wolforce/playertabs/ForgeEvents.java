@@ -36,37 +36,22 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onPlayerLoggedIn(PlayerLoggedInEvent event) {
-		if (event.getPlayer() instanceof ServerPlayer) {
-			ServerPlayer serverplayer = (ServerPlayer) event.getEntity();
-			TabsCapability tabs = TabsCapability.get(serverplayer);
+		if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+			TabsCapability tabs = TabsCapability.get(serverPlayer);
 			if (tabs != null)
-				Net.sendToggleMessageToClient(serverplayer, tabs.getCurrentTab());
+				Net.sendToggleMessageToClient(serverPlayer, tabs.getCurrentTab());
 		}
 	}
-
-//	@SubscribeEvent
-//	public static void onPlayerDeath(LivingDeathEvent event) {
-//		if (event.getEntityLiving()instanceof Player player && !event.getEntityLiving().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
-//			List<ItemStackHandler> otherTabs = TabsCapability.get(player).getAllOtherTabs();
-//			for (ItemStackHandler handler : otherTabs) {
-//				for (int i = 0; i < handler.getSlots(); i++) {
-//					Util.spawnItem(player.level, player.position(), handler.getStackInSlot(i));
-//				}
-//			}
-//		}
-//	}
-
 	@SubscribeEvent
 	public static void onPlayerDeath(LivingDropsEvent event) {
-		if (event.getEntityLiving() instanceof Player player && !event.getEntityLiving().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
+		if (event.getEntity() instanceof Player player && !event.getEntity().level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
 			List<ItemStackHandler> otherTabs = TabsCapability.get(player).getAllOtherTabs();
 			for (ItemStackHandler handler : otherTabs) {
 				for (int i = 0; i < handler.getSlots(); i++) {
 					Vec3 pos = player.position();
 					ItemStack stack = handler.getStackInSlot(i);
-					ItemEntity ent = new ItemEntity(player.level, pos.x, pos.y, pos.z, stack);
+					ItemEntity ent = new ItemEntity(player.level(), pos.x, pos.y, pos.z, stack);
 					event.getDrops().add(ent);
-//					Util.spawnItem(player.level, pos, handler.getStackInSlot(i));
 				}
 			}
 		}
@@ -74,8 +59,8 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onPlayerClone(PlayerEvent.Clone event) {
-		if (!event.isWasDeath() || (event.isWasDeath() && event.getPlayer().level.getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY))) {
-			final Player player = event.getPlayer();
+		if (!event.isWasDeath() || (event.isWasDeath() && event.getEntity().level().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY))) {
+			final Player player = event.getEntity();
 			TabsCapability newCap = TabsCapability.get(player);
 			event.getOriginal().reviveCaps();
 			TabsCapability prevCap = TabsCapability.get(event.getOriginal());
@@ -85,7 +70,7 @@ public class ForgeEvents {
 
 	@SubscribeEvent
 	public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
-		if (event.getPlayer() instanceof ServerPlayer player) {
+		if (event.getEntity() instanceof ServerPlayer player) {
 			TabsCapability tabs = TabsCapability.get(player);
 			Net.sendToggleMessageToClient((ServerPlayer) player, tabs.getCurrentTab());
 		}

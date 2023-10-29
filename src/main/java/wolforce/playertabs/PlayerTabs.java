@@ -17,20 +17,12 @@ public class PlayerTabs {
 	public static final String MOD_ID = "playertabs";
 
 	public PlayerTabs() {
-//		FMLJavaModLoadingContext.get().getModEventBus().addListener(this::setup);
 		MinecraftForge.EVENT_BUS.register(this);
 		PlayerTabsConfigClient.init();
 		PlayerTabsConfigServer.init();
 		ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, PlayerTabsConfigServer.CONFIG_SPEC, MOD_ID + "_server.toml");
 		ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, PlayerTabsConfigClient.CONFIG_SPEC, MOD_ID + "_client.toml");
 	}
-
-//	private void setup(final FMLCommonSetupEvent event) {
-//	}
-
-//	@SubscribeEvent
-//	public void onServerStarting(ServerStartingEvent event) {
-//	}
 
 	@SubscribeEvent
 	public static void commonSetup(FMLCommonSetupEvent event) {

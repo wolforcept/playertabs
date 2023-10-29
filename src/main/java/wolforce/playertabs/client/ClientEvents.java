@@ -5,7 +5,7 @@ import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.network.chat.TextComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.ScreenEvent;
@@ -21,7 +21,7 @@ public class ClientEvents {
 	private static final Minecraft mc = Minecraft.getInstance();
 
 	@SubscribeEvent
-	public static void onInitScreenPost(ScreenEvent.InitScreenEvent.Post event) {
+	public static void onInitScreenPost(ScreenEvent.Init.Post event) {
 		Player player = mc.player;
 		if (player == null)
 			return;
@@ -32,7 +32,7 @@ public class ClientEvents {
 		if (event.getScreen() instanceof AbstractContainerScreen<?> screen) {
 
 			if (PlayerTabsConfigClient.isShowScreenNames())
-				player.sendMessage(new TextComponent(screenName), null);
+				player.sendSystemMessage(Component.translatable(screenName));
 
 			if (blacklistedScreens == null || !blacklistedScreens.contains(screenName)) {
 
@@ -59,7 +59,6 @@ public class ClientEvents {
 									buttons[tabs.getCurrentTab()].active = true;
 									buttons[tabNr].active = false;
 									tabs.setCurrentTab(tabNr);
-									screen.skipNextRelease = true;
 								});
 						if (i == tabs.getCurrentTab()) {
 							buttons[i].active = false;
