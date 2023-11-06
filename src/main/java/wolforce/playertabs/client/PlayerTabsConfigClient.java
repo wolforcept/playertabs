@@ -17,6 +17,7 @@ public class PlayerTabsConfigClient {
 	public final ConfigValue<List<? extends String>> tabNames;
 	public final ConfigValue<List<? extends String>> screensBlacklist;
 	public final ConfigValue<Boolean> showScreenNames;
+	public final ConfigValue<Boolean> AutoPickup;
 
 	public static void init() {
 		Pair<PlayerTabsConfigClient, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(PlayerTabsConfigClient::new);
@@ -29,6 +30,7 @@ public class PlayerTabsConfigClient {
 		tabNames = builder.comment("The names of the tabs.").<String>defineList("tabNames", defaultTabNames, str -> true);
 		screensBlacklist = builder.comment("The names of the screens that tabs should NOT be rendered in.").<String>defineList("screensBlacklist", Util.<String>listOf(), str -> true);
 		showScreenNames = builder.comment("Show the names of the opened screens in chat.").define("showScreenNames", false);
+		AutoPickup = builder.comment("AutoPickup").define("AutoPickup", true);
 	}
 
 	public static List<String> getTabNames() {
@@ -76,6 +78,11 @@ public class PlayerTabsConfigClient {
 			e.printStackTrace();
 		}
 	}
+
+	public static boolean getAutoPickup() {
+		return CONFIG.AutoPickup.get();
+	}
+
 
 	public static void removeScreenName(String screenName) {
 		try {

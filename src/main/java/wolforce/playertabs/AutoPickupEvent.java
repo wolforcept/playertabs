@@ -8,6 +8,8 @@ import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import wolforce.playertabs.client.PlayerTabsConfigClient;
+import wolforce.playertabs.server.PlayerTabsConfigServer;
 
 import java.util.Map;
 
@@ -20,7 +22,7 @@ public class AutoPickupEvent {
         ItemStack item = event.getItem().getItem();
         Player player = event.getEntity();
         Level level = player.level();
-        if (level.isClientSide()) {
+        if (level.isClientSide() || !PlayerTabsConfigClient.getAutoPickup()) {
             return;
         }
         TabsCapability.get(player).ifPresent(cap ->{
