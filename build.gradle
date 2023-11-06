@@ -86,11 +86,11 @@ repositories {
 
 dependencies {
     minecraft "net.minecraftforge:forge:$minecraft_version-$forge_version"
-    compileOnly fg.deobf("mezz.jei:jei-$minecraft_version:$jei_version:api")
-    runtimeOnly fg.deobf("mezz.jei:jei-$minecraft_version:$jei_version")
-    runtimeOnly fg.deobf("curse.maven:iron-chests-228756:3795374")
-    runtimeOnly fg.deobf("curse.maven:sophisticated-core-618298:3847441")
-    runtimeOnly fg.deobf("curse.maven:sophisticated-backpacks-422301:3847503")
+//    compileOnly fg.deobf("mezz.jei:jei-$minecraft_version:$jei_version:api")
+//    runtimeOnly fg.deobf("mezz.jei:jei-$minecraft_version:$jei_version")
+//    runtimeOnly fg.deobf("curse.maven:iron-chests-228756:3795374")
+//    runtimeOnly fg.deobf("curse.maven:sophisticated-core-618298:3847441")
+//    runtimeOnly fg.deobf("curse.maven:sophisticated-backpacks-422301:3847503")
 }
 
 jar {
