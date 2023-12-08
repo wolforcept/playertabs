@@ -53,6 +53,5 @@ public class TabButton extends AbstractButton {
 
 
 	public void m_142291_(NarrationElementOutput p_142291_) {
-		// Add your implementation here
 	}
 }
