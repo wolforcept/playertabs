@@ -51,4 +51,8 @@ public class TabButton extends AbstractButton {
 	@Override
 	protected void updateWidgetNarration(NarrationElementOutput p_259858_) {}
 
+
+	public void m_142291_(NarrationElementOutput p_142291_) {
+		// Add your implementation here
+	}
 }
